@@ -89,6 +89,30 @@
         //the date range picker
         this.container = $(DRPTemplate).appendTo('body');
 
+        parseTextDate = function(td){
+            d = moment();
+            switch(td){
+                case 'today' :
+                    break;
+                case 'yesterday' :
+                    d = d.startOf('day').subtract('days', 1)                          
+                    break;
+                case 'this week' :
+                    d = d.startOf('week')         
+                    break;
+                case 'last week' :
+                    d = d.startOf('week').subtract('weeks', 1)              
+                    break;
+                case 'this month' :
+                    d = d.startOf('month')
+                    break;
+                case 'last month' :
+                    d = d.startOf('month').subtract('months', 1)                          
+                    break;
+            }
+            return d;
+        }
+
         if (hasOptions) {
 
             if (typeof options.format == 'string')
@@ -121,29 +145,30 @@
 
             if (typeof options.ranges == 'object') {
                 for (var range in options.ranges) {
-
                     var start = options.ranges[range][0];
                     var end = options.ranges[range][1];
 
-                    if (typeof start == 'string')
-                        start = moment(start);
+                    if (typeof start == 'string'){
+                        start = parseTextDate(start);
+                    }
 
-                    if (typeof end == 'string')
-                        end = moment(end);
+                    if (typeof end == 'string'){
+                        end = parseTextDate(end);
+                    }
 
                     // If we have a min/max date set, bound this range
                     // to it, but only if it would otherwise fall
                     // outside of the min/max.
-                    if (this.minDate && this.minDate.diff(start) <= 0)
+                    if (this.minDate && this.minDate > start )
                         start = this.minDate.clone();
 
-                    if (this.maxDate && this.maxDate.diff(start) >= 0)
+                    if (this.maxDate && this.maxDate < end )
                         end = this.maxDate.clone();
 
                     // If the end of the range is before the minimum (if min is set) OR
                     // the start of the range is after the max (also if set) don't display this
                     // range option.
-                    if ((this.minDate && this.minDate.diff(end) < 0 ) || (this.maxDate && this.maxDate.diff(start) > 0))
+                    if ((this.minDate && this.minDate > end ) || (this.maxDate && this.maxDate < start ))
                     {
                         continue;
                     }
@@ -223,8 +248,8 @@
         },
 
         updateView: function () {
-            this.leftCalendar.month.month(this.startDate.month()).year(this.startDate.year());
-            this.rightCalendar.month.month(this.endDate.month()).year(this.endDate.year());
+            this.leftCalendar.month = this.startDate.clone().startOf('month');
+            this.rightCalendar.month = this.endDate.clone().startOf('month');
 
             this.container.find('input[name=daterangepicker_start]').val(this.startDate.format(this.format));
             this.container.find('input[name=daterangepicker_end]').val(this.endDate.format(this.format));
@@ -322,8 +347,8 @@
                 this.startDate = dates[0];
                 this.endDate = dates[1];
 
-                this.leftCalendar.month.month(this.startDate.month()).year(this.startDate.lastYear());
-                this.rightCalendar.month.month(this.endDate.month()).year(this.endDate.year());
+                this.leftCalendar.month = this.startDate.clone().startOf('month');
+                this.rightCalendar.month = this.endDate.clone().startOf('month');
 
                 this.updateCalendars();
 
@@ -434,7 +459,7 @@
             if (dayOfWeek == this.locale.firstDay)
                 startDay = daysInLastMonth - 6;
 
-            var curDate = moment(lastMonth).day(startDay.day());
+            var curDate = moment(lastMonth).day(startDay);
             for (var i = 0, col = 0, row = 0; i < 42; i++, col++, curDate = moment(curDate).add('days', 1)) {
                 if (i > 0 && col % 7 == 0) {
                     col = 0;
